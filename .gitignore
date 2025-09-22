@@ -148,3 +148,7 @@ WebGLTemplates/
 Assets/OpenCVForUnity/
 *.utmp
 utmp/
+
+# Build logs and artifacts
+*.log
+build.log
