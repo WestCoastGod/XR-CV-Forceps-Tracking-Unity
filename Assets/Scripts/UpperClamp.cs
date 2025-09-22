@@ -1,0 +1,32 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class UpperClamp : MonoBehaviour
+{
+    [SerializeField]
+    private ForcepsController parentForceps;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        parentForceps.OnUpperTriggerEnter(other.gameObject);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        parentForceps.OnUpperTriggerExit(other.gameObject);
+    }
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+}
