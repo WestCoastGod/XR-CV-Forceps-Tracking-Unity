@@ -18,16 +18,16 @@ namespace TryAR.MarkerTracking
     {
     /// <summary>
     /// The ArUco dictionary to use for marker detection. Set to match your printed markers.
-    /// Default updated to DICT_5X5_100 to match user setup (IDs 0-5).
+    /// Default updated to DICT_4X4_100 to match user setup (IDs 0-5).
     /// </summary>
-    [SerializeField] private ArUcoDictionary _dictionaryId = ArUcoDictionary.DICT_5X5_100;
+    [SerializeField] private ArUcoDictionary _dictionaryId = ArUcoDictionary.DICT_4X4_100;
 
         [Space(10)]
 
         /// <summary>
         /// The length of the markers' side in meters.
         /// </summary>
-        [SerializeField] private float _markerLength = 0.1f;
+        [SerializeField] private float _markerLength = 0.3f;
 
         /// <summary>
         /// Coefficient for low-pass filter (0-1). Higher values mean more smoothing.
@@ -38,7 +38,7 @@ namespace TryAR.MarkerTracking
         /// <summary>
         /// Division factor for input image resolution. Higher values improve performance but reduce detection accuracy.
         /// </summary>
-        [SerializeField] private int _divideNumber = 2;
+        [SerializeField] private int _divideNumber = 1;
         
         /// <summary>
         /// Read-only access to the divide number value
@@ -277,7 +277,9 @@ namespace TryAR.MarkerTracking
         /// </summary>
         /// <param name="webCamTexture">Input webcam texture</param>
         /// <param name="resultTexture">Optional output texture for visualization</param>
-        public void DetectMarker(WebCamTexture webCamTexture, Texture2D resultTexture = null)
+        /// <param name="contrast">Contrast adjustment (1.0 = no change)</param>
+        /// <param name="brightness">Brightness adjustment (0 = no change)</param>
+        public void DetectMarker(WebCamTexture webCamTexture, Texture2D resultTexture = null, float contrast = 1.0f, float brightness = 0.0f)
         {
             if (_isReady)
             {
@@ -294,6 +296,13 @@ namespace TryAR.MarkerTracking
                 
                 // Convert to RGB for visualization and to GRAY for detection
                 Imgproc.cvtColor(_halfSizeMat, _processingRgbMat, Imgproc.COLOR_RGBA2RGB);
+                
+                // Apply brightness and contrast adjustment if needed
+                if (contrast != 1.0f || brightness != 0.0f)
+                {
+                    _processingRgbMat.convertTo(_processingRgbMat, -1, contrast, brightness);
+                }
+                
                 Imgproc.cvtColor(_halfSizeMat, _processingGrayMat, Imgproc.COLOR_RGBA2GRAY);
 
               

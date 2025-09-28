@@ -38,8 +38,29 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     [Tooltip("Show axes projected on 2D canvas only (no 3D world axes)")]
     [SerializeField] private bool drawCanvasAxes = true;
 
+    [Header("Camera Display Settings")]
+    [Tooltip("Adjust camera brightness (0=no change, positive=brighter, negative=darker)")]
+    [SerializeField] private float cameraBrightness = 0.0f;
+    [Tooltip("Adjust camera contrast (1.0=no change, >1.0=more contrast, <1.0=less contrast)")]
+    [SerializeField] private float cameraContrast = 1.0f;
+
+    [Header("Smoothing Settings")]
+    [Tooltip("One Euro Filter minimum cutoff frequency for position")]
+    [SerializeField] private float positionMinCutoff = 1.0f;
+    [Tooltip("One Euro Filter beta (speed coefficient) for position")]  
+    [SerializeField] private float positionBeta = 0.1f;
+    [Tooltip("One Euro Filter minimum cutoff frequency for rotation")]
+    [SerializeField] private float rotationMinCutoff = 1.0f;
+    [Tooltip("One Euro Filter beta (speed coefficient) for rotation")]
+    [SerializeField] private float rotationBeta = 0.1f;
+
     private MarkerCornerExtractor cornerExtractor;
     private Texture2D resultTexture;
+
+    // One Euro Filters for smooth tracking
+    private OneEuroFilterVec3 positionFilter;
+    private OneEuroFilterQuat rotationFilter;
+    private float lastUpdateTime;
 
     private struct PoseData { public Vector3 position; public Quaternion rotation; }
     private PoseData? lastValidPose;
@@ -73,6 +94,11 @@ public class RigidCubeAxesMinimal : MonoBehaviour
 
         // Configure extractor to share frames/poses
         cornerExtractor.Configure(arucoTracker, webCamManager, cameraAnchor);
+
+        // Initialize One Euro Filters
+        positionFilter = new OneEuroFilterVec3(positionMinCutoff, positionBeta);
+        rotationFilter = new OneEuroFilterQuat(rotationMinCutoff, rotationBeta);
+        lastUpdateTime = Time.time;
 
         // Prepare optional 2D output texture
         if (resultRawImage != null)
@@ -109,7 +135,7 @@ public class RigidCubeAxesMinimal : MonoBehaviour
         // Run detection (writes into optional UI texture)
         try 
         { 
-            arucoTracker.DetectMarker(webCamManager.WebCamTexture, resultTexture); 
+            arucoTracker.DetectMarker(webCamManager.WebCamTexture, resultTexture, cameraContrast, cameraBrightness); 
             Debug.Log($"DetectMarker called - resultTexture is {(resultTexture != null ? "not null" : "null")}");
         }
         catch (System.Exception ex) { Debug.LogError($"DetectMarker failed: {ex.Message}"); return; }
@@ -139,14 +165,17 @@ public class RigidCubeAxesMinimal : MonoBehaviour
         if (!arucoTracker.EstimateBoardPoseWorld(boardCorners.ToArray(), boardIds.ToArray(), cameraAnchor, out cubePos, out cubeRot))
             return;
 
-        // Apply smoothing for stability
-        if (lastValidPose.HasValue)
+        // Apply One Euro Filter smoothing
+        float currentTime = Time.time;
+        float deltaTime = currentTime - lastUpdateTime;
+        lastUpdateTime = currentTime;
+        
+        if (deltaTime > 0.001f) // Avoid division by zero
         {
-            float posSmooth = 0.7f; // Strong smoothing for stability
-            float rotSmooth = 0.8f;
-            cubePos = Vector3.Lerp(cubePos, lastValidPose.Value.position, posSmooth);
-            cubeRot = Quaternion.Slerp(cubeRot, lastValidPose.Value.rotation, rotSmooth);
+            cubePos = positionFilter.Filter(cubePos, deltaTime);
+            cubeRot = rotationFilter.Filter(cubeRot, deltaTime);
         }
+        
         lastValidPose = new PoseData { position = cubePos, rotation = cubeRot };
 
         // Update cube model with adjustments
