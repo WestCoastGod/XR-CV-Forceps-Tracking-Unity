@@ -3,11 +3,44 @@ using UnityEngine;
 // Lightweight One Euro filters for smoothing
 public class OneEuroFilter
 {
-    protected float minCutoff = 1.0f;
-    protected float beta = 0.0f;
+    public float minCutoff = 1.0f;
+    public float beta = 0.0f;
     protected float dCutoff = 1.0f;
     protected bool initialized = false;
     protected float lastTime = -1f;
+    
+    // For scalar filtering
+    private float xPrev;
+    private float dxPrev;
+
+    public OneEuroFilter(float minCutoff = 1.0f, float beta = 0.0f, float dCutoff = 1.0f)
+    {
+        this.minCutoff = minCutoff;
+        this.beta = beta;
+        this.dCutoff = dCutoff;
+    }
+
+    public float Filter(float x, float dt)
+    {
+        if (!initialized)
+        {
+            xPrev = x;
+            dxPrev = 0f;
+            initialized = true;
+            return x;
+        }
+
+        // Derivative of the signal
+        float dx = (x - xPrev) / Mathf.Max(1e-4f, dt);
+        float aD = Alpha(dCutoff, dt);
+        dxPrev = Mathf.Lerp(dxPrev, dx, aD);
+
+        // Adaptive cutoff
+        float cutoff = minCutoff + beta * Mathf.Abs(dxPrev);
+        float a = Alpha(cutoff, dt);
+        xPrev = Mathf.Lerp(xPrev, x, a);
+        return xPrev;
+    }
 
     protected static float Alpha(float cutoff, float dt)
     {
