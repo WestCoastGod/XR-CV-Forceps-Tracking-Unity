@@ -38,8 +38,6 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     [SerializeField] private float axesLength = 0.05f; // 5 cm
     [Tooltip("Show axes projected on 2D canvas only (no 3D world axes)")]
     [SerializeField] private bool drawCanvasAxes = true;
-    [Tooltip("Show axes for second cube (markers 6-11) on canvas")]
-    [SerializeField] private bool drawSecondCubeAxes = true;
 
     [Header("Camera Display Settings")]
     [Tooltip("Adjust camera brightness (0=no change, positive=brighter, negative=darker)")]
@@ -48,25 +46,25 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     [SerializeField] private float cameraContrast = 1.0f;
 
     [Header("Smoothing Settings")]
-    [Tooltip("One Euro Filter minimum cutoff frequency for position")]
-    [SerializeField] private float positionMinCutoff = 1.0f;
-    [Tooltip("One Euro Filter beta (speed coefficient) for position")]  
-    [SerializeField] private float positionBeta = 0.1f;
-    [Tooltip("One Euro Filter minimum cutoff frequency for rotation")]
-    [SerializeField] private float rotationMinCutoff = 1.0f;
-    [Tooltip("One Euro Filter beta (speed coefficient) for rotation")]
-    [SerializeField] private float rotationBeta = 0.1f;
+    [Tooltip("One Euro Filter minimum cutoff frequency for position - USE 0.05 FOR SMOOTH TRACKING! (1.0 = jittery)")]
+    [SerializeField] private float positionMinCutoff = 0.05f;
+    [Tooltip("One Euro Filter beta (speed coefficient) for position - USE 0.0 FOR SMOOTH TRACKING! (0.1 = jittery)")]  
+    [SerializeField] private float positionBeta = 0.0f;
+    [Tooltip("One Euro Filter minimum cutoff frequency for rotation - USE 0.05 FOR SMOOTH TRACKING! (1.0 = jittery)")]
+    [SerializeField] private float rotationMinCutoff = 0.05f;
+    [Tooltip("One Euro Filter beta (speed coefficient) for rotation - USE 0.0 FOR SMOOTH TRACKING! (0.1 = jittery)")]
+    [SerializeField] private float rotationBeta = 0.0f;
 
-    [Header("Clamp Control (Second Cube)")]
+    [Header("Clamp Control (Marker Visibility)")]
     [SerializeField] private bool enableClampControl = true;
     [SerializeField] private Transform upperClamp;
     [SerializeField] private Transform lowerClamp;
     
     [Header("Marker Visibility Detection (Method 13)")]
-    [Tooltip("Use marker visibility detection - clamps close when marker is NOT visible")]
+    [Tooltip("Use marker visibility detection - clamps CLOSE when ANY marker is VISIBLE, OPEN when ALL are hidden (OR logic)")]
     [SerializeField] private bool useMarkerVisibility = true;
-    [Tooltip("Marker ID to monitor for visibility (typically 6 - the marker that gets occluded when squeezing)")]
-    [SerializeField] private int visibilityMarkerID = 6;
+    [Tooltip("Marker IDs to monitor - clamps CLOSE when ANY of these markers is VISIBLE")]
+    [SerializeField] private List<int> visibilityMarkerIDs = new List<int> { 8 };
     [Tooltip("Smoothing for visibility-based control (prevents jitter from detection dropouts)")]
     [SerializeField] private float visibilitySmoothing = 0.5f;
     [SerializeField] private float clampAnimationDuration = 0.3f;
@@ -84,13 +82,6 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     private struct PoseData { public Vector3 position; public Quaternion rotation; }
     private PoseData? lastValidPose;
 
-    // Second cube tracking
-    private Vector3 lastSecondCubeCenter = Vector3.zero;
-    private Quaternion lastSecondCubeRotation = Quaternion.identity;
-    private OneEuroFilterVec3 secondCubePositionFilter;
-    private OneEuroFilterQuat secondCubeRotationFilter;
-    private bool secondCubeTrackingInitialized = false;
-
     // Method 13: Marker visibility tracking
     private bool markerWasVisible = true; // Start assuming visible
     private float visibilityFilteredValue = 1.0f; // 1.0 = visible, 0.0 = not visible
@@ -105,6 +96,13 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     private Quaternion lowerClampClosedRot;
     private Coroutine currentClampAnimation;
     private bool clampInitialized = false;
+    
+    // Flag to prevent clamp animation when object is grabbed
+    private bool freezeClampAnimation = false;
+    
+    // Target clamp rotations when frozen (for precise ball holding)
+    private Quaternion? frozenUpperClampRotation = null;
+    private Quaternion? frozenLowerClampRotation = null;
 
     private void Start()
     {
@@ -141,10 +139,6 @@ public class RigidCubeAxesMinimal : MonoBehaviour
         rotationFilter = new OneEuroFilterQuat(rotationMinCutoff, rotationBeta);
         scaleFilter = new OneEuroFilter(); // Initialize scale filter with default params
         lastUpdateTime = Time.time;
-
-        // Initialize filters for second cube
-        secondCubePositionFilter = new OneEuroFilterVec3(positionMinCutoff, positionBeta);
-        secondCubeRotationFilter = new OneEuroFilterQuat(rotationMinCutoff, rotationBeta);
 
         // Prepare optional 2D output texture
         if (resultRawImage != null)
@@ -246,10 +240,10 @@ public class RigidCubeAxesMinimal : MonoBehaviour
         
         lastValidPose = new PoseData { position = cubePos, rotation = cubeRot };
 
-        // Track second cube (markers 6-11) for clamp control
-        if (enableClampControl && clampInitialized)
+        // METHOD 13: Simple marker visibility check for clamp control
+        if (enableClampControl && clampInitialized && useMarkerVisibility)
         {
-            TrackSecondCubeAndControlClamp(cubePos, cubeRot);
+            CheckMarkerVisibilityAndControlClamp();
         }
 
         // Update cube model with adjustments
@@ -271,15 +265,10 @@ public class RigidCubeAxesMinimal : MonoBehaviour
             cubeModel.rotation = adjustedRot;
             cubeModel.localScale = adjustedScale;
         }        // Draw 2D projected axes on the canvas texture
+        // Draw 2D projected axes on the canvas texture
         if (drawCanvasAxes && resultTexture != null && cameraAnchor != null)
         {
             arucoTracker.DrawWorldAxesOnImage(cubePos, cubeRot, cameraAnchor, axesLength, resultTexture);
-            
-            // Draw second cube axes if enabled and detected
-            if (drawSecondCubeAxes && lastSecondCubeCenter != Vector3.zero)
-            {
-                arucoTracker.DrawWorldAxesOnImage(lastSecondCubeCenter, lastSecondCubeRotation, cameraAnchor, axesLength, resultTexture);
-            }
         }
     }
 
@@ -325,132 +314,57 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     }
 
     /// <summary>
-    /// Track second cube (markers 6-11) and control clamp angle based on rotation-validated distance.
-    /// Uses rotation alignment to validate both cubes are tracking the same rigid object,
-    /// then measures distance in a shared local coordinate frame for stability.
-    /// METHOD 13: Can also use marker visibility detection (if useMarkerVisibility=true).
+    /// METHOD 13: Simple marker visibility check for clamp control.
+    /// Checks if specified markers (visibilityMarkerIDs) are ALL visible to control clamps.
+    /// No second cube tracking needed - just single marker detection.
     /// </summary>
-    private void TrackSecondCubeAndControlClamp(Vector3 trackingCubePos, Quaternion trackingCubeRot)
+    private void CheckMarkerVisibilityAndControlClamp()
     {
-        // Extract corners for second cube markers (6-11)
-        List<int> secondCubeIds;
-        List<Vector3[]> secondCubeCorners;
+        // Check if any markers 6-11 are visible
+        List<int> detectedMarkerIds;
+        List<Vector3[]> detectedMarkerCorners;
         
-        if (!cornerExtractor.GetDetectedMarkerCorners(new List<int> { 6, 7, 8, 9, 10, 11 }, 
-            out secondCubeIds, out secondCubeCorners) || secondCubeIds.Count == 0)
+        bool anyMarkerDetected = cornerExtractor.GetDetectedMarkerCorners(
+            new List<int> { 6, 7, 8, 9, 10, 11 }, 
+            out detectedMarkerIds, 
+            out detectedMarkerCorners) && detectedMarkerIds.Count > 0;
+        
+        if (anyMarkerDetected)
         {
-            // Second cube not detected - keep current clamp state
-            lastSecondCubeCenter = Vector3.zero;
-            lastSecondCubeRotation = Quaternion.identity;
-            secondCubeTrackingInitialized = false;
+            // OR logic: Check if ANY specified marker is visible
+            // Clamps CLOSE when ANY marker is VISIBLE, OPEN when ALL are hidden
+            bool anyMarkerVisible = false;
+            List<int> visibleMarkers = new List<int>();
+            List<int> hiddenMarkers = new List<int>();
             
-            // Method 13: If using visibility detection, marker not visible = closed
-            if (useMarkerVisibility)
+            foreach (int markerID in visibilityMarkerIDs)
             {
-                UpdateMarkerVisibility(false);
-            }
-            return;
-        }
-
-        // METHOD 13: Marker Visibility Detection
-        // Check if the specific marker is visible and use that for clamp control
-        if (useMarkerVisibility)
-        {
-            bool markerVisible = secondCubeIds.Contains(visibilityMarkerID);
-            UpdateMarkerVisibility(markerVisible);
-            
-            // Control clamps based on visibility (visible = open, not visible = closed)
-            ControlClampByVisibility();
-            
-            // Still track position for visualization, but don't use distance-based control
-            if (Time.frameCount % 60 == 0)
-            {
-                Debug.Log($"[METHOD 13] Marker {visibilityMarkerID} visible: {markerVisible}, Clamp state: {(visibilityFilteredValue > 0.5f ? "OPEN" : "CLOSED")}, Detected markers: {secondCubeIds.Count}");
-            }
-        }
-
-        // Get board definition for second cube (markers 6-11 use same geometry as 0-5)
-        var (boardCorners, boardIds) = DiceCADModel.GetOpenCVBoardDefinition();
-        
-        // Map detected markers to board corners
-        var objCorners = new List<Vector3[]>();
-        var detCorners = new List<Vector3[]>();
-        var usedIds = new List<int>();
-        
-        for (int i = 0; i < secondCubeIds.Count; i++)
-        {
-            // Map marker IDs 6-11 to board definition 0-5
-            int mappedId = secondCubeIds[i] - 6; // 6->0, 7->1, 8->2, 9->3, 10->4, 11->5
-            int idx = boardIds.IndexOf(mappedId);
-            
-            if (idx >= 0)
-            {
-                objCorners.Add(boardCorners[idx]);
-                detCorners.Add(secondCubeCorners[i]);
-                usedIds.Add(secondCubeIds[i]);
-            }
-        }
-        
-        if (usedIds.Count == 0)
-        {
-            lastSecondCubeCenter = Vector3.zero;
-            lastSecondCubeRotation = Quaternion.identity;
-            secondCubeTrackingInitialized = false;
-            return;
-        }
-
-        // Estimate rigid pose using board approach (same as tracking cube)
-        Vector3 secondCubePos;
-        Quaternion secondCubeRot;
-        
-        if (!arucoTracker.EstimateBoardPoseWorld(objCorners.ToArray(), usedIds.ToArray(), cameraAnchor, out secondCubePos, out secondCubeRot))
-        {
-            lastSecondCubeCenter = Vector3.zero;
-            lastSecondCubeRotation = Quaternion.identity;
-            secondCubeTrackingInitialized = false;
-            return;
-        }
-
-        // Apply One Euro Filter smoothing to second cube
-        float currentTime = Time.time;
-        float deltaTime = currentTime - lastUpdateTime;
-        
-        if (deltaTime > 0.001f) // Avoid division by zero
-        {
-            // Adaptive smoothing for second cube based on marker count
-            float adaptiveMinCutoff = positionMinCutoff;
-            float adaptiveBeta = positionBeta;
-            
-            if (usedIds.Count <= 2)
-            {
-                // Stronger smoothing with fewer markers
-                adaptiveMinCutoff *= 0.5f;
-                adaptiveBeta *= 0.5f;
+                if (detectedMarkerIds.Contains(markerID))
+                {
+                    visibleMarkers.Add(markerID);
+                    anyMarkerVisible = true;
+                }
+                else
+                {
+                    hiddenMarkers.Add(markerID);
+                }
             }
             
-            if (secondCubeTrackingInitialized)
-            {
-                // Update filter parameters and apply smoothing
-                secondCubePositionFilter.minCutoff = adaptiveMinCutoff;
-                secondCubePositionFilter.beta = adaptiveBeta;
-                secondCubeRotationFilter.minCutoff = rotationMinCutoff * (usedIds.Count <= 2 ? 0.5f : 1.0f);
-                secondCubeRotationFilter.beta = rotationBeta * (usedIds.Count <= 2 ? 0.5f : 1.0f);
-                
-                secondCubePos = secondCubePositionFilter.Filter(secondCubePos, deltaTime);
-                secondCubeRot = secondCubeRotationFilter.Filter(secondCubeRot, deltaTime);
-            }
-            else
-            {
-                // First frame - initialize filters
-                secondCubePositionFilter.Filter(secondCubePos, deltaTime);
-                secondCubeRotationFilter.Filter(secondCubeRot, deltaTime);
-                secondCubeTrackingInitialized = true;
-            }
+            Debug.Log($"[DETECTION] {detectedMarkerIds.Count} markers detected: [{string.Join(", ", detectedMarkerIds)}] - Visible: [{string.Join(", ", visibleMarkers)}], Hidden: [{string.Join(", ", hiddenMarkers)}], Any visible: {anyMarkerVisible}");
+            
+            // anyMarkerVisible=true means at least one marker visible → close clamps → pass true
+            UpdateMarkerVisibility(anyMarkerVisible);
+        }
+        else
+        {
+            // No markers detected - all markers are hidden
+            Debug.Log($"[DETECTION] NO markers detected (6-11) - All markers hidden");
+            // All markers hidden means OPEN → pass false (markers not visible → visibilityFilteredValue→1.0→open)
+            UpdateMarkerVisibility(false);
         }
         
-        // Store smoothed pose
-        lastSecondCubeCenter = secondCubePos;
-        lastSecondCubeRotation = secondCubeRot;
+        // Control clamps based on visibility
+        ControlClampByVisibility();
     }
 
     /// <summary>
@@ -489,12 +403,16 @@ public class RigidCubeAxesMinimal : MonoBehaviour
             consecutiveVisibleFrames++;
             consecutiveInvisibleFrames = 0;
             
+            Debug.Log($"[VISIBILITY] Markers [{string.Join(", ", visibilityMarkerIDs)}] DETECTED (any visible) - ConsecVisible: {consecutiveVisibleFrames}, ConsecInvisible: 0, FilteredValue: {visibilityFilteredValue:F3}");
+            
             // Require multiple frames to confirm visibility (prevents jitter)
             if (consecutiveVisibleFrames >= VISIBILITY_CONFIRMATION_FRAMES)
             {
                 markerWasVisible = true;
-                // Smooth transition to visible state
-                visibilityFilteredValue = Mathf.Lerp(visibilityFilteredValue, 1.0f, visibilitySmoothing);
+                float oldValue = visibilityFilteredValue;
+                // Markers visible → CLOSE clamps → visibilityFilteredValue = 0.0
+                visibilityFilteredValue = Mathf.Lerp(visibilityFilteredValue, 0.0f, visibilitySmoothing);
+                Debug.Log($"[VISIBILITY] Confirmed MARKERS VISIBLE (>={VISIBILITY_CONFIRMATION_FRAMES} frames) - CLOSING clamps - Lerping {oldValue:F3} → {visibilityFilteredValue:F3} (smoothing: {visibilitySmoothing})");
             }
         }
         else
@@ -502,12 +420,16 @@ public class RigidCubeAxesMinimal : MonoBehaviour
             consecutiveInvisibleFrames++;
             consecutiveVisibleFrames = 0;
             
+            Debug.Log($"[VISIBILITY] Markers [{string.Join(", ", visibilityMarkerIDs)}] NOT DETECTED (all hidden) - ConsecVisible: 0, ConsecInvisible: {consecutiveInvisibleFrames}, FilteredValue: {visibilityFilteredValue:F3}");
+            
             // Require multiple frames to confirm invisibility
             if (consecutiveInvisibleFrames >= VISIBILITY_CONFIRMATION_FRAMES)
             {
                 markerWasVisible = false;
-                // Smooth transition to invisible state
-                visibilityFilteredValue = Mathf.Lerp(visibilityFilteredValue, 0.0f, visibilitySmoothing);
+                float oldValue = visibilityFilteredValue;
+                // Markers hidden → OPEN clamps → visibilityFilteredValue = 1.0
+                visibilityFilteredValue = Mathf.Lerp(visibilityFilteredValue, 1.0f, visibilitySmoothing);
+                Debug.Log($"[VISIBILITY] Confirmed MARKERS HIDDEN (>={VISIBILITY_CONFIRMATION_FRAMES} frames) - OPENING clamps - Lerping {oldValue:F3} → {visibilityFilteredValue:F3} (smoothing: {visibilitySmoothing})");
             }
         }
     }
@@ -520,6 +442,25 @@ public class RigidCubeAxesMinimal : MonoBehaviour
     private void ControlClampByVisibility()
     {
         if (upperClamp == null || lowerClamp == null) return;
+        
+        // Don't animate if clamps are frozen (object grabbed)
+        if (freezeClampAnimation)
+        {
+            // If we have frozen target rotations, move smoothly to them
+            if (frozenUpperClampRotation.HasValue && frozenLowerClampRotation.HasValue)
+            {
+                float freezeAnimSpeed = 10.0f; // Fast movement to target
+                upperClamp.localRotation = Quaternion.Slerp(upperClamp.localRotation, frozenUpperClampRotation.Value, Time.deltaTime * freezeAnimSpeed);
+                lowerClamp.localRotation = Quaternion.Slerp(lowerClamp.localRotation, frozenLowerClampRotation.Value, Time.deltaTime * freezeAnimSpeed);
+                
+                // Log freeze status periodically
+                if (Time.frameCount % 120 == 0)
+                {
+                    Debug.Log($"[RigidCube] Clamp animation FROZEN - Target: Upper={frozenUpperClampRotation.Value.eulerAngles}, Lower={frozenLowerClampRotation.Value.eulerAngles}");
+                }
+            }
+            return; // Don't run visibility-based animation
+        }
 
         // Map visibility to clamp state: 1.0 (visible) = open, 0.0 (not visible) = closed
         float targetClampState = visibilityFilteredValue;
@@ -532,5 +473,43 @@ public class RigidCubeAxesMinimal : MonoBehaviour
         float animSpeed = 1.0f / clampAnimationDuration;
         upperClamp.localRotation = Quaternion.Slerp(upperClamp.localRotation, targetUpperRot, Time.deltaTime * animSpeed);
         lowerClamp.localRotation = Quaternion.Slerp(lowerClamp.localRotation, targetLowerRot, Time.deltaTime * animSpeed);
+    }
+    
+    /// <summary>
+    /// PUBLIC API: Freeze clamp animation (called when object is grabbed)
+    /// </summary>
+    public void FreezeClampAnimation(bool freeze)
+    {
+        freezeClampAnimation = freeze;
+        if (freeze)
+        {
+            // Store current rotations as frozen target
+            if (upperClamp != null && lowerClamp != null)
+            {
+                frozenUpperClampRotation = upperClamp.localRotation;
+                frozenLowerClampRotation = lowerClamp.localRotation;
+                Debug.Log($"[RigidCube] Clamp animation FROZEN at current angle - Upper: {frozenUpperClampRotation.Value.eulerAngles}, Lower: {frozenLowerClampRotation.Value.eulerAngles}");
+            }
+            else
+            {
+                Debug.Log("[RigidCube] Clamp animation FROZEN - object grabbed");
+            }
+        }
+        else
+        {
+            frozenUpperClampRotation = null;
+            frozenLowerClampRotation = null;
+            Debug.Log("[RigidCube] Clamp animation UNFROZEN - object released");
+        }
+    }
+    
+    /// <summary>
+    /// PUBLIC API: Set specific target angle for frozen clamps (for precise ball holding)
+    /// </summary>
+    public void SetFrozenClampRotations(Quaternion upperRot, Quaternion lowerRot)
+    {
+        frozenUpperClampRotation = upperRot;
+        frozenLowerClampRotation = lowerRot;
+        Debug.Log($"[RigidCube] Set frozen clamp target rotations - Upper: {upperRot.eulerAngles}, Lower: {lowerRot.eulerAngles}");
     }
 }

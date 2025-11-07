@@ -165,16 +165,25 @@ public class CustomXRDirectInteractor : UnityEngine.XR.Interaction.Toolkit.Inter
 
         Vector3 referencePosition = GetReferencePositionForAttach(interactable);
 
+        Debug.Log($"[CustomXRInteractor] FindClosestAttachTransform for {(interactable?.transform != null ? interactable.transform.name : "NULL")} at position {referencePosition}");
+
         foreach (var attachTransform in m_AttachTransforms)
         {
             if (attachTransform == null) continue;
 
             float distance = Vector3.Distance(attachTransform.position, referencePosition);
+            Debug.Log($"[CustomXRInteractor] - {attachTransform.name}: distance = {distance:F4}m");
+            
             if (distance < closestDistance)
             {
                 closestDistance = distance;
                 closestTransform = attachTransform;
             }
+        }
+
+        if (closestTransform != null)
+        {
+            Debug.Log($"[CustomXRInteractor] SELECTED: {closestTransform.name} (distance: {closestDistance:F4}m)");
         }
 
         return closestTransform;
