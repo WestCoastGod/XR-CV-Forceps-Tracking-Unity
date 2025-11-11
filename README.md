@@ -17,7 +17,7 @@
 
 Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker detection on Meta Quest 3's passthrough cameras. This system enables controller-free, precise tracking and interaction with virtual objects in mixed reality surgical training scenarios.
 
-### 🎥 Demo Video
+### Demo Video
 
 <div align="center">
 
@@ -25,7 +25,7 @@ Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker dete
   <img src="Source/demo_snapshot.png" alt="Demo Video" width="300">
 </a>
 
-*Click image above to watch full demonstration video*
+***Click image above to watch full demonstration video***
 
 </div>
 
@@ -44,22 +44,28 @@ Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker dete
 
 <table>
 <tr>
-<td width="50%">
-<img src="Source/real_forceps_and_3dprints.jpg" alt="Real Forceps with 3D Prints">
-<p align="center"><b>Complete Assembly</b><br>Laparoscopic forceps with 3D printed marker mounts</p>
+<td width="50%" align="center">
+<img src="Source/laparoscopic-forceps.jpg" alt="Laparoscopic Forceps" >
+<p align="center"><b>Laparoscopic Forceps</b><br>Standard surgical instrument for training</p>
 </td>
-<td width="50%">
-<img src="Source/Marker_Tracking_Cube.jpg" alt="Marker Tracking Cube">
-<p align="center"><b>6DOF Tracking Cube</b><br>ArUco markers (IDs 0-5) for pose estimation</p>
+<td width="50%" align="center">
+<img src="Source/real_forceps_and_3dprints.jpg" alt="Real Forceps with 3D Prints" height="300">
+<p align="center"><b>Complete Assembly</b><br>Laparoscopic forceps with 3D printed marker mounts</p>
 </td>
 </tr>
 <tr>
-<td width="50%">
-<img src="Source/Clamps_Control_Handle.JPEG" alt="Clamps Control Handle">
-<p align="center"><b>Visibility Control Handles</b><br>Markers (IDs 9, 6, 10) for clamp state control</p>
+<td width="50%" align="center">
+<img src="Source/Marker_Tracking_Cube.jpg" alt="Marker Tracking Cube" height="300">
+<p align="center"><b>6DOF Tracking Cube</b><br>ArUco markers (IDs 0-5) for pose estimation</p>
 </td>
-<td width="50%">
-<img src="Source/demo_snapshot.png" alt="System Demo">
+<td width="50%" align="center">
+<img src="Source/Clamps_Control_Handle.JPEG" alt="Clamps Control Handle" height="300">
+<p align="center"><b>Visibility Control Handles</b><br>Markers (IDs 6, 7, 8, 9, 10) for clamp state control</p>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+<img src="Source/demo_snapshot.png" alt="System Demo" height="300">
 <p align="center"><b>System in Action</b><br>Real-time tracking with Meta Quest 3 passthrough</p>
 </td>
 </tr>
@@ -81,7 +87,7 @@ Meta Quest 3 Passthrough Camera (30Hz, 1280×960)
     RigidCubeAxesMinimal.cs
     ├─ 6DOF Pose Estimation (markers 0-5)
     ├─ One Euro Filter Smoothing
-    └─ Visibility Detection (markers 9,6,10)
+    └─ Visibility Detection (markers 6,7,8,9,10)
             ↓
     ForcepsController.cs
     ├─ ArUco Grab/Release State Machine
@@ -106,7 +112,7 @@ Tracks 6 ArUco markers (IDs 0-5) mounted on a rigid cube attached to the forceps
 
 #### 2. Marker Visibility Control
 
-Monitors 3 visibility markers (IDs 9, 6, 10) to control clamp state using OR logic:
+Monitors 5 visibility markers (IDs 6, 7, 8, 9, 10) to control clamp state using OR logic:
 - **ANY marker visible** → clamps CLOSE
 - **ALL markers hidden** → clamps OPEN
 
@@ -200,9 +206,9 @@ cd XR-CV-Forceps-Tracking-Unity
 
 ### 4. ArUco Marker Setup
 
-1. **Print 9 ArUco markers** (DICT_4X4_50):
+1. **Print 11 ArUco markers** (DICT_4X4_50):
    - IDs 0-5: Cube face markers (6DOF tracking)
-   - IDs 9, 6, 10: Visibility control markers
+   - IDs 6, 7, 8, 9, 10: Visibility control markers
 
 2. **Marker specifications:**
    - Size: 65-100mm per marker (larger = better long-range detection)
@@ -212,19 +218,19 @@ cd XR-CV-Forceps-Tracking-Unity
 
 3. **Physical Assembly:**
    - Attach markers 0-5 to the 3D printed tracking cube
-   - Attach visibility markers 9, 6, 10 to the 3D printed control handles
+   - Attach visibility markers 6, 7, 8, 9, 10 to the 3D printed control handles
    - Mount cube assembly to forceps handle
    - Mount control handles to forceps clamp handles
    - Ensure markers are flat and securely mounted
 
-### 4. Component Configuration
+### 5. Component Configuration
 
 **RigidCubeAxesMinimal:**
 ```
 Marker Length Meters: 0.065  (adjust to your printed marker size)
 Position Min Cutoff: 0.05    (lower = smoother)
 Position Beta: 0.0           (speed coefficient)
-Visibility Marker IDs: [9, 6, 10]
+Visibility Marker IDs: [6, 7, 8, 9, 10]
 Visibility Smoothing: 0.5
 ```
 
@@ -248,7 +254,7 @@ Attach Transforms: [OuterAttach, MiddleAttach, InnerAttach]
 2. Point passthrough cameras at ArUco cube on forceps
 3. Wait for tracking initialization (cube model appears)
 4. Position a ball between the forceps clamps
-5. **Hide markers** (cover 9,6,10 with hand) → clamps **CLOSE** and grab ball
+5. **Hide markers** (cover 6,7,8,9,10 with hand) → clamps **CLOSE** and grab ball
 6. **Show markers** (remove hand) → clamps **OPEN** and release ball
 
 ### Troubleshooting
@@ -260,7 +266,7 @@ Attach Transforms: [OuterAttach, MiddleAttach, InnerAttach]
 - Check marker print quality and flatness
 
 **Clamps not responding:**
-- Verify visibility markers 9, 6, 10 are correctly positioned
+- Verify visibility markers 6, 7, 8, 9, 10 are correctly positioned
 - Check marker IDs match configuration
 - Enable debug logging to monitor marker detection
 
@@ -347,7 +353,7 @@ Assets/Scripts/
 | Markers | Clamp State | Status |
 |---------|-------------|--------|
 | None | OPEN | ✅ |
-| Any 1-3 | CLOSE | ✅ |
+| Any 1-5 | CLOSE | ✅ |
 
 ---
 
