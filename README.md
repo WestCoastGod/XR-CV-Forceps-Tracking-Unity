@@ -333,23 +333,23 @@ Assets/Scripts/
 
 ### Tracking Accuracy
 
-- ✅ ±5mm accuracy within 1.5m range
-- ✅ Stable with 4+ markers visible
+- ±5mm accuracy within 1.5m range
+- Stable with 4+ markers visible
 
 ### Clamp Angle Validation
 
 | Ball Size | Attach Point | Target Angle | Status |
 |-----------|-------------|--------------|--------|
-| Small | Outer | -50° | ✅ |
-| Medium | Middle | -67.5° | ✅ |
-| Large | Inner | -85° | ✅ |
+| Small | Outer | -50° | Yes |
+| Medium | Middle | -67.5° | Yes |
+| Large | Inner | -85° | Yes |
 
 ### Visibility Logic
 
 | Markers | Clamp State | Status |
 |---------|-------------|--------|
-| None | OPEN | ✅ |
-| Any 1-5 | CLOSE | ✅ |
+| None | OPEN | Yes |
+| Any 1-5 | CLOSE | Yes |
 
 ---
 
