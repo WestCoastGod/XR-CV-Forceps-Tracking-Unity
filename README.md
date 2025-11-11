@@ -1,4 +1,6 @@
-# XR CV Forceps Tracking
+# ArUco-Based 6DOF Laparoscopic Forceps Tracking for Meta Quest 3
+
+### *Extended Reality Surgical Training with Computer Vision*
 
 [![Unity](https://img.shields.io/badge/Unity-2022.3_LTS-black?logo=unity)](https://unity.com/)
 [![Meta Quest 3](https://img.shields.io/badge/Meta_Quest-3-blue)](https://www.meta.com/quest/)
@@ -316,12 +318,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## Author
-
-Developed as part of MR surgical training research. This repository focuses on the ArUco-based 6DOF tracking and marker visibility control system.
 
 **Repository:** https://github.com/WestCoastGod/XR-CV-Forceps-Tracking-Unity
 
 ---
 
-**Built for advancing surgical training through Extended Reality and Computer Vision**
