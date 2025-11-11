@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <p align="left">
-  <img width="300" src="media/meta-quest.svg" alt="Meta Quest 3">
+  <img width="300" src="Source/meta-quest.svg" alt="Meta Quest 3">
 </p>
 
 ## Overview
@@ -145,7 +145,19 @@ cd XR-CV-Forceps-Tracking-Unity
    - Switch Platform to Android
    - Configure Quest-specific settings
 
-### 3. ArUco Marker Setup
+### 3. 3D Printed Hardware
+
+**3D Print Files (3MF format):**
+- [`Marker_Tracking_Cube.3mf`](Source/Marker_Tracking_Cube.3mf) - Rigid cube mount for 6DOF tracking markers
+- [`Clamps_Control_Handle.3mf`](Source/Clamps_Control_Handle.3mf) - Handle mount for visibility control markers
+
+**Printing Notes:**
+- Files can be opened with most 3D modeling applications (Blender, Fusion 360, PrusaSlicer, Cura, etc.)
+- Recommended material: PLA or PETG
+- Print with adequate infill (20%+) for structural rigidity
+- Print orientation: flat surfaces down for better adhesion
+
+### 4. ArUco Marker Setup
 
 1. **Print 9 ArUco markers** (DICT_4X4_50):
    - IDs 0-5: Cube face markers (6DOF tracking)
@@ -158,8 +170,10 @@ cd XR-CV-Forceps-Tracking-Unity
    - Border: Ensure white border around black marker pattern
 
 3. **Physical Assembly:**
-   - Attach markers 0-5 to a rigid cube on forceps handle
-   - Attach visibility markers 9, 6, 10 to forceps clamp handles
+   - Attach markers 0-5 to the 3D printed tracking cube
+   - Attach visibility markers 9, 6, 10 to the 3D printed control handles
+   - Mount cube assembly to forceps handle
+   - Mount control handles to forceps clamp handles
    - Ensure markers are flat and securely mounted
 
 ### 4. Component Configuration
