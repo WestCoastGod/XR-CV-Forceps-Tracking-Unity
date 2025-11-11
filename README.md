@@ -21,7 +21,7 @@ Real-time 6DoF tracking of laparoscopic surgical forceps using ArUco marker dete
 
 <div align="center">
 
-<a href="https://drive.google.com/file/d/1hKMK9hxnVVk6sPYRvNClHU6z29GJnme-/view?usp=drive_link">
+<a href="https://drive.google.com/file/d/1v_u9bjhfHb0YSTbGebytTq-UGBKrRcUN/view?usp=sharing">
   <img src="Source/demo_snapshot.png" alt="Demo Video" width="300">
 </a>
 
