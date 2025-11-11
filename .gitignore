@@ -156,3 +156,6 @@ utmp/
 # Build logs and artifacts
 *.log
 build.log
+
+# Project Summary Report
+PROJECT_SUMMARY.md
