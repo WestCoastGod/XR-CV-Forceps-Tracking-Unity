@@ -111,12 +111,12 @@ Extended `XRDirectInteractor` with multiple attach transforms:
 - XR Interaction Toolkit 2.6.4+
 - XR Plugin Management 4.4.0+
 - Oculus XR Plugin 3.2.3+
+- Quest Horizon OS v74+
 
 ### Platform Support
 
 - **Meta Quest 3** (primary target)
-- **Meta Quest 2** (supported, lower camera resolution)
-- **Meta Quest Pro** (supported)
+- **Meta Quest 3S** (supported)
 
 ---
 
