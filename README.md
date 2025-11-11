@@ -1,4 +1,4 @@
-# ArUco-Based 6DOF Laparoscopic Forceps Tracking for Meta Quest 3
+# ArUco-Based 6DoF Laparoscopic Forceps Tracking for Meta Quest 3
 
 ### *Extended Reality Surgical Training with Computer Vision*
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker detection on Meta Quest 3's passthrough cameras. This system enables controller-free, precise tracking and interaction with virtual objects in mixed reality surgical training scenarios.
+Real-time 6DoF tracking of laparoscopic surgical forceps using ArUco marker detection on Meta Quest 3's passthrough cameras. This system enables controller-free, precise tracking and interaction with virtual objects in mixed reality surgical training scenarios.
 
 ### Demo Video
 
@@ -31,7 +31,7 @@ Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker dete
 
 ### Key Features
 
-- **Computer vision-based 6DOF tracking** using ArUco markers (no controllers required)
+- **Computer vision-based 6DoF tracking** using ArUco markers (no controllers required)
 - **Marker visibility-based clamp control** with OR logic (any marker visible → close, all hidden → open)
 - **Size-adaptive object grasping** with geometric angle calculation
 - **Multi-attach-point system** for different object sizes
@@ -56,17 +56,13 @@ Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker dete
 <tr>
 <td width="50%" align="center">
 <img src="Source/Marker_Tracking_Cube.jpg" alt="Marker Tracking Cube" height="300">
-<p align="center"><b>6DOF Tracking Cube</b><br>ArUco markers (IDs 0-5) for pose estimation</p>
+<p align="center"><b>6DoF Tracking Cube</b><br>ArUco markers (IDs 0-5) for pose estimation<br>
+<a href="Source/Marker_Tracking_Cube.3mf">Download 3D Print File (.3mf)</a></p>
 </td>
 <td width="50%" align="center">
 <img src="Source/Clamps_Control_Handle.JPEG" alt="Clamps Control Handle" height="300">
-<p align="center"><b>Visibility Control Handles</b><br>Markers (IDs 6, 7, 8, 9, 10) for clamp state control</p>
-</td>
-</tr>
-<tr>
-<td colspan="2" align="center">
-<img src="Source/demo_snapshot.png" alt="System Demo" height="300">
-<p align="center"><b>System in Action</b><br>Real-time tracking with Meta Quest 3 passthrough</p>
+<p align="center"><b>Visibility Control Handles</b><br>Markers (IDs 6, 7, 8, 9, 10) for clamp state control<br>
+<a href="Source/Clamps_Control_Handle.3mf">Download 3D Print File (.3mf)</a></p>
 </td>
 </tr>
 </table>
@@ -85,7 +81,7 @@ Meta Quest 3 Passthrough Camera (30Hz, 1280×960)
     MarkerCornerExtractor.cs (3D World Corners)
             ↓
     RigidCubeAxesMinimal.cs
-    ├─ 6DOF Pose Estimation (markers 0-5)
+    ├─ 6DoF Pose Estimation (markers 0-5)
     ├─ One Euro Filter Smoothing
     └─ Visibility Detection (markers 6,7,8,9,10)
             ↓
@@ -195,7 +191,7 @@ cd XR-CV-Forceps-Tracking-Unity
 ### 3. 3D Printed Hardware
 
 **3D Print Files (3MF format):**
-- [`Marker_Tracking_Cube.3mf`](Source/Marker_Tracking_Cube.3mf) - Rigid cube mount for 6DOF tracking markers
+- [`Marker_Tracking_Cube.3mf`](Source/Marker_Tracking_Cube.3mf) - Rigid cube mount for 6DoF tracking markers
 - [`Clamps_Control_Handle.3mf`](Source/Clamps_Control_Handle.3mf) - Handle mount for visibility control markers
 
 **Printing Notes:**
@@ -207,7 +203,7 @@ cd XR-CV-Forceps-Tracking-Unity
 ### 4. ArUco Marker Setup
 
 1. **Print 11 ArUco markers** (DICT_4X4_50):
-   - IDs 0-5: Cube face markers (6DOF tracking)
+   - IDs 0-5: Cube face markers (6DoF tracking)
    - IDs 6, 7, 8, 9, 10: Visibility control markers
 
 2. **Marker specifications:**
@@ -322,7 +318,7 @@ Assets/Scripts/
 ├── ArUcoMarkerTracking.cs        # OpenCV ArUco detection wrapper
 ├── MarkerCornerExtractor.cs      # 3D corner extraction from detected markers
 ├── RigidCubeAxesMinimal.cs       # Main tracking + visibility control
-├── RigidBodyPoseEstimator.cs     # 6DOF pose estimation from markers
+├── RigidBodyPoseEstimator.cs     # 6DoF pose estimation from markers
 ├── OneEuroFilters.cs             # Position/rotation smoothing filters
 ├── ForcepsController.cs          # Grab/release logic + geometric calculation
 ├── CustomXRDirectInteractor.cs   # Multi-attach-point XR interactor
