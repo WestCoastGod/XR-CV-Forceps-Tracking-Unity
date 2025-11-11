@@ -8,12 +8,26 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <p align="left">
-  <img width="300" src="Source/meta-quest.svg" alt="Meta Quest 3">
+  <a href="https://www.meta.com/quest/quest-3/">
+    <img width="300" src="Source/meta-quest.svg" alt="Meta Quest 3">
+  </a>
 </p>
 
 ## Overview
 
 Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker detection on Meta Quest 3's passthrough cameras. This system enables controller-free, precise tracking and interaction with virtual objects in mixed reality surgical training scenarios.
+
+### 🎥 Demo Video
+
+<div align="center">
+
+<a href="https://drive.google.com/file/d/1hKMK9hxnVVk6sPYRvNClHU6z29GJnme-/view?usp=drive_link">
+  <img src="Source/demo_snapshot.png" alt="Demo Video" width="300">
+</a>
+
+*Click image above to watch full demonstration video*
+
+</div>
 
 ### Key Features
 
@@ -23,6 +37,33 @@ Real-time 6DOF tracking of laparoscopic surgical forceps using ArUco marker dete
 - **Multi-attach-point system** for different object sizes
 - **One Euro Filter smoothing** for stable tracking with adaptive parameters
 - **Anti-regrab cooldown** mechanism to prevent object teleportation after release
+
+---
+
+## Hardware Setup
+
+<table>
+<tr>
+<td width="50%">
+<img src="Source/real_forceps_and_3dprints.jpg" alt="Real Forceps with 3D Prints">
+<p align="center"><b>Complete Assembly</b><br>Laparoscopic forceps with 3D printed marker mounts</p>
+</td>
+<td width="50%">
+<img src="Source/Marker_Tracking_Cube.jpg" alt="Marker Tracking Cube">
+<p align="center"><b>6DOF Tracking Cube</b><br>ArUco markers (IDs 0-5) for pose estimation</p>
+</td>
+</tr>
+<tr>
+<td width="50%">
+<img src="Source/Clamps_Control_Handle.JPEG" alt="Clamps Control Handle">
+<p align="center"><b>Visibility Control Handles</b><br>Markers (IDs 9, 6, 10) for clamp state control</p>
+</td>
+<td width="50%">
+<img src="Source/demo_snapshot.png" alt="System Demo">
+<p align="center"><b>System in Action</b><br>Real-time tracking with Meta Quest 3 passthrough</p>
+</td>
+</tr>
+</table>
 
 ---
 
