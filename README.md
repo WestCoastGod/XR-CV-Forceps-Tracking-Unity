@@ -9,10 +9,10 @@
 
 <p align="left">
   <a href="https://www.meta.com/quest/">
-    <img width="400" src="Source/meta-quest.svg" alt="Meta Quest" style="vertical-align: middle; display: inline-block;">
+    <img width="300" src="Source/meta-quest.svg" alt="Meta Quest" style="vertical-align: middle;">
   </a>
   <a href="https://www.meta.com/quest/quest-3/">
-    <img width="300" src="Source/Quest_3.png" alt="Meta Quest 3" style="vertical-align: middle; display: inline-block;">
+    <img width="300" src="Source/Quest_3.png" alt="Meta Quest 3" style="vertical-align: middle;">
   </a>
 </p>
 
