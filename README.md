@@ -7,14 +7,14 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-ArUco-green?logo=opencv)](https://opencv.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<table>
+<table border="0">
 <tr>
-<td valign="middle">
+<td valign="middle" style="border:none;">
   <a href="https://www.meta.com/quest/">
     <img width="300" src="Source/meta-quest.svg" alt="Meta Quest">
   </a>
 </td>
-<td valign="middle">
+<td valign="middle" style="border:none;">
   <a href="https://www.meta.com/quest/quest-3/">
     <img width="300" src="Source/Quest_3.png" alt="Meta Quest 3">
   </a>
